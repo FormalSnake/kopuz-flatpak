@@ -1,0 +1,43 @@
+name: Test Bundle
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - 'test/**'
+
+jobs:
+  bundle:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 300
+    container:
+      image: ghcr.io/andyholmes/flatter/gnome:master
+      options: --privileged
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Install runtimes
+        run: |
+          flatpak install --noninteractive flathub org.gnome.Sdk/x86_64/50
+          flatpak install --noninteractive flathub org.gnome.Platform/x86_64/50
+          flatpak install --noninteractive flathub org.freedesktop.Sdk.Extension.node24/x86_64/25.08
+          flatpak install --noninteractive flathub org.freedesktop.Sdk.Extension.rust-stable/x86_64/25.08
+
+      - name: Build
+        run: |
+          flatpak-builder --disable-rofiles-fuse --force-clean \
+            --repo=repo build-dir moe.kopuz.kopuz.json
+
+      - name: Bundle
+        run: flatpak build-bundle repo kopuz.flatpak moe.kopuz.kopuz
+
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: kopuz-x86_64-flatpak
+          path: kopuz.flatpak
+          retention-days: 14
