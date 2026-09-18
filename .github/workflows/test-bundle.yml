@@ -20,6 +20,9 @@ jobs:
         with:
           submodules: true
 
+      - name: Install unzip
+        run: dnf install -y unzip
+
       - name: Install runtimes
         run: |
           flatpak install --noninteractive flathub org.gnome.Sdk/x86_64/50
